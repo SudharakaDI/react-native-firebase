@@ -59,13 +59,20 @@ import 'react-native-gesture-handler';
 import React, { useEffect, useState } from 'react'
 import { NavigationContainer } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
-import { LoginScreen, HomeScreen, RegistrationScreen, HomeeScreen, SummaryScreen} from './src/screens'
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { LoginScreen, HomeScreen, RegistrationScreen, HomeeScreen, SummaryScreen, DailySalesInfoScreen, DailySalesAddScreen} from './src/screens'
 import {decode, encode} from 'base-64'
+
+
 // import SummaryScreen from './src/screens/SummaryScreen/SummaryScreen';
 if (!global.btoa) {  global.btoa = encode }
 if (!global.atob) { global.atob = decode }
 
-const Stack = createStackNavigator();
+
+
+const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
 
 export default function App() {
 
@@ -74,7 +81,7 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator>
+      <Tab.Navigator initialRouteName='Home'>
         {/* { user ? (
           <Stack.Screen name="Home" component={HomeScreen}>
             {props => <HomeScreen {...props} extraData={user} />}
@@ -89,13 +96,16 @@ export default function App() {
             
           </>
         )} */}
-            <Stack.Screen name="Summary" component={SummaryScreen} />
-            <Stack.Screen name="Home" component={HomeScreen} />
-          	<Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Registration" component={RegistrationScreen} />
+            <Tab.Screen name="Home" component={HomeScreen} />
+            <Tab.Screen name="Add Sales" component={DailySalesAddScreen} />
+            <Tab.Screen name="Daily Sales" component={DailySalesInfoScreen} />
+            <Tab.Screen name="Summary" component={SummaryScreen} />
+            
+          	{/* <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Registration" component={RegistrationScreen} /> */}
             
         
-      </Stack.Navigator>
+      </Tab.Navigator>
     </NavigationContainer>
   );
 }

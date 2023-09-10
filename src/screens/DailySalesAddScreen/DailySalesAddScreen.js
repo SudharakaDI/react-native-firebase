@@ -10,7 +10,7 @@ import { SelectList } from 'react-native-dropdown-select-list'
 
 
 
-export default function HomeScreen({ navigation }) {
+export default function DailySalesAddScreen({ navigation }) {
     const [date, setDate] = useState(new Date());
     // const [mode, setMode] = useState('date');
 
@@ -51,6 +51,10 @@ export default function HomeScreen({ navigation }) {
                   
                 console.log('Added document with ID: ', res.id);
                 alert("Successfully added");
+                setNumberOfMushroomPackets('');
+                setReturnedPackets('');
+                navigation.navigate("Daily Sales")
+                
             }
             catch (error) {
                 alert("Could not add todays details");
@@ -69,10 +73,7 @@ export default function HomeScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <Text>
-                Welcome to mushroom handler
-            </Text>
-            {/* <KeyboardAwareScrollView
+            <KeyboardAwareScrollView
                 style={{ flex: 1, width: '100%' }}
                 keyboardShouldPersistTaps="always">
 
@@ -86,7 +87,15 @@ export default function HomeScreen({ navigation }) {
                     underlineColorAndroid="transparent"
                     autoCapitalize="none"
                 />
-                
+                {/* <TextInput
+                    style={styles.input}
+                    placeholder='Mushroom Type'
+                    placeholderTextColor="#aaaaaa"
+                    onChangeText={(text) => setMushroomType(text)}
+                    value={mushroomType}
+                    underlineColorAndroid="transparent"
+                    autoCapitalize="none"
+                /> */}
                 <SelectList
                     boxStyles={styles.input}
                     dropdownStyles = {styles.selectionDropdown}
@@ -123,7 +132,7 @@ export default function HomeScreen({ navigation }) {
                     onPress={() => { onAddPress() }}>
                     <Text style={styles.buttonTitle}>Add</Text>
                 </TouchableOpacity>
-            </KeyboardAwareScrollView> */}
+            </KeyboardAwareScrollView>
         </View>
     )
 }

@@ -1,158 +1,30 @@
-// import React, { useState } from 'react'
-// import { Image, Text, TextInput, TouchableOpacity, View } from 'react-native'
-// import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-// import styles from './styles';
-// import app from '../../firebase/config'
-// import { getFirestore, doc, setDoc, collection, getDocs, addDoc } from "firebase/firestore";
-// import { SelectList } from 'react-native-dropdown-select-list'
-// import { Button } from 'react-native'
-// import DateTimePicker from '@react-native-community/datetimepicker';
-// import { async } from '@firebase/util';
-
-
-
-
-// export function SummaryScreen({ navigation }) {
-//     const [date, setDate] = useState(new Date());
-//     const [mode, setMode] = useState('date');
-//     const [show, setShow] = useState(false);
-
-//     const [mushroomType, setMushroomType] = useState('')
-//     const [numberOfPackets, setNumberOfMushroomPackets] = useState('')
-//     const [returnedPackets, setReturnedPackets] = useState('')
-//     const [selectedMushroomType, setSelectedMushroomType] = useState("");
-
-//     const db = getFirestore(app)
-//     const mushroomTypes = [
-//         { key: '1', value: 'Abaloni'},
-//         { key: '2', value: 'Sudu Bimmal'},
-//     ]
-
-
-
-//     const onAddPress = async () => {
-//         var str_date = date.toLocaleDateString()
-        
-//         if(numberOfPackets==""){
-//             alert("Number of packets field is empty")
-//         }
-//         else if(returnedPackets==""){
-//             alert("Returned packet field is empty")
-//         }
-
-//         else{
-
-//             docData = {
-//                 "date": str_date,
-//                 "mushroomType": selectedMushroomType,
-//                 "dailyPacketsSold": numberOfPackets,
-//                 "dailyPacketsReturned": returnedPackets
-//             }
-    
-//             try {
-//                 // await setDoc(doc(db, "mushroom_sales", str_date), docData);
-//                 const res = await addDoc(collection(db, 'mushroom_sales'), docData);
-                  
-//                 console.log('Added document with ID: ', res.id);
-//                 alert("Successfully added");
-//             }
-//             catch (error) {
-//                 alert("Could not add todays details");
-//                 console.log(error);
-//             }
-
-//         }
-
-
-//     }
-
-    
-
-//     return (
-//         <View style={styles.container}>
-//             <KeyboardAwareScrollView
-//                 style={{ flex: 1, width: '100%' }}
-//                 keyboardShouldPersistTaps="always">
-
-//                 <TextInput
-//                     style={styles.input}
-//                     placeholder='Date'
-//                     placeholderTextColor="#aaaaaa"
-//                     editable={false}
-//                     onChangeText={(text) => setDate(text)}
-//                     value={date.toLocaleDateString()}
-//                     underlineColorAndroid="transparent"
-//                     autoCapitalize="none"
-//                 />
-//                 {/* <TextInput
-//                     style={styles.input}
-//                     placeholder='Mushroom Type'
-//                     placeholderTextColor="#aaaaaa"
-//                     onChangeText={(text) => setMushroomType(text)}
-//                     value={mushroomType}
-//                     underlineColorAndroid="transparent"
-//                     autoCapitalize="none"
-//                 /> */}
-//                 <SelectList
-//                     boxStyles={styles.input}
-//                     dropdownStyles = {styles.selectionDropdown}
-//                     defaultOption={{ key: '1', value: 'Abaloni'}}
-//                     setSelected={(val) => setSelectedMushroomType(val)}
-//                     search={false}
-//                     data={mushroomTypes}
-//                     save="value"
-//                     placeholder='Mushroom Type'
-//                 />
-//                 <TextInput
-//                     style={styles.input}
-//                     keyboardType='numeric' 
-//                     placeholderTextColor="#aaaaaa"
-//                     placeholder='Number of packets'
-//                     onChangeText={(text) => setNumberOfMushroomPackets(text)}
-//                     value={numberOfPackets}
-//                     underlineColorAndroid="transparent"
-//                     autoCapitalize="none"
-//                 />
-//                 <TextInput
-//                     style={styles.input}
-//                     keyboardType='numeric' 
-//                     placeholderTextColor="#aaaaaa"
-//                     placeholder='Returned packets'
-//                     onChangeText={(text) => setReturnedPackets(text)}
-//                     value={returnedPackets}
-//                     underlineColorAndroid="transparent"
-//                     autoCapitalize="none"
-//                 />
-
-//                 <TouchableOpacity
-//                     style={styles.button}
-//                     onPress={() => { onAddPress() }}>
-//                     <Text style={styles.buttonTitle}>Add</Text>
-//                 </TouchableOpacity>
-//             </KeyboardAwareScrollView>
-//         </View>
-//     )
-// }
 
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import _ from "lodash"
-
+import _ from "lodash";
+import app from '../../firebase/config'
+import { getFirestore, doc, setDoc, collection, getDocs, addDoc } from "firebase/firestore";
+import styles from './styles';
 
 
 export default function SummaryScreen() {
-  const [ columns, setColumns ] = useState([
-    "Name",
-    "Gender",
-    "Breed",
-    "Weight",
-    "Age"
+  const [columns, setColumns] = useState([
+    "Date",
+    "Mushroom Type",
+    "Packets Sold",
+    "Packets Returened",
   ])
-  const [ direction, setDirection ] = useState(null)
-  const [ selectedColumn, setSelectedColumn ] = useState(null)
-  const [ pets, setPets ] = useState([
+  const [direction, setDirection] = useState(null)
+  const [selectedColumn, setSelectedColumn] = useState(null)
+  const [salesDetails, setSalesDetails] = useState(null)
+  const db = getFirestore(app)
+
+
+
+
+  const [pets, setPets] = useState([
     {
       Name: "Charlie",
       Gender: "Male",
@@ -239,9 +111,65 @@ export default function SummaryScreen() {
     }
   ])
 
+  useEffect(() => {
+
+    const fetchData = async () => {
+
+      const querySnapshot = await getDocs(collection(db, "mushroom_sales"));
+
+      const salesDetailsList = querySnapshot.docs.map((doc) => {
+        const data = doc.data();
+
+        const salesDetail = {
+          packetsReturned: data.dailyPacketsReturned,
+          packetsSold: data.dailyPacketsSold,
+          date: data.date,
+          mushroomType: data.mushroomType
+
+        };
+        return salesDetail;
+      });
+
+      // // Convert the date strings to JavaScript Date objects for proper comparison
+      salesDetailsList.forEach(item => {
+        item.date = new Date(item.date);
+      });
+
+      // Sort the data based on the "date" field in ascending order
+      salesDetailsList.sort((a, b) => a.date - b.date);
+
+
+      salesDetailsList.forEach(item => {
+        item.date = item.date.toLocaleDateString()
+      });
+
+      // If you want to sort in descending order, you can use this instead:
+      // data.sort((a, b) => b.date - a.date);
+
+      // Now, your data is sorted by date
+      
+
+      setSalesDetails(salesDetailsList);
+      console.log(salesDetailsList)
+
+    };
+
+
+
+
+
+    // querySnapshot.forEach((doc) => {
+    //   // doc.data() is never undefined for query doc snapshots
+    //   console.log(doc.id, " => ", doc.data());
+    // });
+
+    fetchData();
+    
+  }, []);
+
   const sortTable = (column) => {
-    const newDirection = direction === "desc" ? "asc" : "desc" 
-    const sortedData = _.orderBy(pets, [column],[newDirection])
+    const newDirection = direction === "desc" ? "asc" : "desc"
+    const sortedData = _.orderBy(salesDetails, [column], [newDirection])
     setSelectedColumn(column)
     setDirection(newDirection)
     setPets(sortedData)
@@ -252,14 +180,14 @@ export default function SummaryScreen() {
         columns.map((column, index) => {
           {
             return (
-              <TouchableOpacity 
+              <TouchableOpacity
                 key={index}
-                style={styles.columnHeader} 
-                onPress={()=> sortTable(column)}>
-                <Text style={styles.columnHeaderTxt}>{column + " "} 
-                  { selectedColumn === column && <MaterialCommunityIcons 
-                      name={direction === "desc" ? "arrow-down-drop-circle" : "arrow-up-drop-circle"} 
-                    />
+                style={styles.columnHeader}
+                onPress={() => sortTable(column)}>
+                <Text style={styles.columnHeaderTxt}>{column + " "}
+                  {selectedColumn === column && <MaterialCommunityIcons
+                    name={direction === "desc" ? "arrow-down-drop-circle" : "arrow-up-drop-circle"}
+                  />
                   }
                 </Text>
               </TouchableOpacity>
@@ -272,20 +200,20 @@ export default function SummaryScreen() {
 
   return (
     <View style={styles.container}>
-      <FlatList 
-        data={pets}
-        style={{width:"90%"}}
-        keyExtractor={(item, index) => index+""}
+      <FlatList
+        data={salesDetails}
+        style={{ width: "90%" }}
+        keyExtractor={(item, index) => index + ""}
         ListHeaderComponent={tableHeader}
         stickyHeaderIndices={[0]}
-        renderItem={({item, index})=> {
+        renderItem={({ item, index }) => {
           return (
-            <View style={{...styles.tableRow, backgroundColor: index % 2 == 1 ? "#F0FBFC" : "white"}}>
-              <Text style={{...styles.columnRowTxt, fontWeight:"bold"}}>{item.Name}</Text>
-              <Text style={styles.columnRowTxt}>{item.Gender}</Text>
-              <Text style={styles.columnRowTxt}>{item.Breed}</Text>
-              <Text style={styles.columnRowTxt}>{item.Weight}</Text>
-              <Text style={styles.columnRowTxt}>{item.Age}</Text>
+            <View style={{ ...styles.tableRow, backgroundColor: index % 2 == 1 ? "#F0FBFC" : "white" }}>
+              {/* <Text style={{...styles.columnRowTxt, fontWeight:"bold"}}>{item.Name}</Text> */}
+              <Text style={styles.columnRowTxt}>{item.date}</Text>
+              <Text style={styles.columnRowTxt}>{item.mushroomType}</Text>
+              <Text style={styles.columnRowTxt}>{item.packetsSold}</Text>
+              <Text style={styles.columnRowTxt}>{item.packetsReturned}</Text>
             </View>
           )
         }}
@@ -295,40 +223,40 @@ export default function SummaryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop:80
-  },
-  tableHeader: {
-    flexDirection: "row",
-    justifyContent: "space-evenly",
-    alignItems: "center",
-    backgroundColor: "#37C2D0",
-    borderTopEndRadius: 10,
-    borderTopStartRadius: 10,
-    height: 50
-  },
-  tableRow: {
-    flexDirection: "row",
-    height: 40,
-    alignItems:"center",
-  },
-  columnHeader: {
-    width: "20%",
-    justifyContent: "center",
-    alignItems:"center"
-  },
-  columnHeaderTxt: {
-    color: "white",
-    fontWeight: "bold",
-  },
-  columnRowTxt: {
-    width:"20%",
-    textAlign:"center",
-  }
-});
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: '#fff',
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     paddingTop:80
+//   },
+//   tableHeader: {
+//     flexDirection: "row",
+//     justifyContent: "space-evenly",
+//     alignItems: "center",
+//     backgroundColor: "#37C2D0",
+//     borderTopEndRadius: 10,
+//     borderTopStartRadius: 10,
+//     height: 50
+//   },
+//   tableRow: {
+//     flexDirection: "row",
+//     height: 50,
+//     alignItems:"center",
+//   },
+//   columnHeader: {
+//     width: "20%",
+//     justifyContent: "center",
+//     alignItems:"center"
+//   },
+//   columnHeaderTxt: {
+//     color: "white",
+//     fontWeight: "bold",
+//   },
+//   columnRowTxt: {
+//     width:"25%",
+//     textAlign:"center",
+//   }
+// });
 
